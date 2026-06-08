@@ -5,6 +5,7 @@ export default class SceneManager {
     this.scene = null;
     this.camera = null;
     this.renderer = null;
+    this.cameraTarget = new THREE.Vector3();
 
     this.onWindowResize = this.onWindowResize.bind(this);
     this.animate = this.animate.bind(this);
@@ -16,7 +17,7 @@ export default class SceneManager {
     }
 
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0x11161d);
+    this.scene.background = null;
 
     this.setupCamera();
     this.setupRenderer();
@@ -34,7 +35,7 @@ export default class SceneManager {
     );
 
     this.camera.position.set(0, 8.5, 8.5);
-    this.camera.lookAt(0, 0, 0);
+    this.updateCameraComposition();
 
     // OrbitControls varsa (ör. ileride eklerseniz):
     // controls.minDistance = 7;
@@ -67,8 +68,10 @@ export default class SceneManager {
   setupRenderer() {
     this.renderer = new THREE.WebGLRenderer({
       antialias: true,
+      alpha: true,
       preserveDrawingBuffer: true,
     });
+    this.renderer.setClearColor(0x000000, 0);
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.shadowMap.enabled = true;
@@ -83,8 +86,23 @@ export default class SceneManager {
 
   onWindowResize() {
     this.camera.aspect = window.innerWidth / window.innerHeight;
+    this.updateCameraComposition();
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(window.innerWidth, window.innerHeight);
+  }
+
+  updateCameraComposition() {
+    let horizontalOffset = 0;
+
+    if (window.innerWidth >= 1280) {
+      horizontalOffset = 1.35;
+    } else if (window.innerWidth >= 900) {
+      horizontalOffset = 0.75;
+    }
+
+    this.camera.position.set(horizontalOffset, 8.5, 8.5);
+    this.cameraTarget.set(horizontalOffset, 0, 0);
+    this.camera.lookAt(this.cameraTarget);
   }
 
   render() {

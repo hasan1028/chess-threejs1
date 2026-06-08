@@ -107,9 +107,14 @@ export default class InputController {
           this.hoveredSquare = null;
           this.uiManager.update(this.game);
 
-          // AI is triggered by Game.movePiece() after the WHITE move.
-          // Here we only re-render after the human move animation.
           this.isAnimating = false;
+
+          this.game.scheduleAIMove(900, () => {
+            this.pieceRenderer.renderPieces(this.game.board);
+            this.chessBoard3D.clearHighlights();
+            this.hoveredSquare = null;
+            this.uiManager.update(this.game);
+          });
         },
       );
     } else {

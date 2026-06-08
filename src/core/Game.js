@@ -23,9 +23,15 @@ export default class Game {
 
     this.isAIThinking = false;
     this.isLocked = false;
+    this.aiMoveTimeout = null;
   }
 
   startNewGame() {
+    if (this.aiMoveTimeout) {
+      clearTimeout(this.aiMoveTimeout);
+      this.aiMoveTimeout = null;
+    }
+
     this.board = new Board();
     this.board.initializeBoard();
     this.currentTurn = COLORS.WHITE;
@@ -46,6 +52,10 @@ export default class Game {
   }
 
   selectPiece(row, col) {
+    if (this.isLocked || this.isAIThinking) {
+      return null;
+    }
+
     const piece = this.board.getPiece(row, col);
 
     if (!piece || piece.color !== this.currentTurn) {
@@ -58,7 +68,7 @@ export default class Game {
   }
 
   movePiece(fromRow, fromCol, toRow, toCol, isAIMove = false) {
-    if (this.isLocked) return false;
+    if (this.isLocked && !isAIMove) return false;
 
     const isValid = MoveValidator.isValidMove(
       this.board,
@@ -85,22 +95,13 @@ export default class Game {
     this.switchTurn();
     this.updateGameState();
 
-    // WHITE move succeeded => let the AI respond when it's its turn.
-    if (!isAIMove && this.gameMode === GAME_MODES.PLAYER_VS_AI) {
-      if (this.currentTurn === COLORS.BLACK) {
-        // Do not await here: InputController handles animation completion.
-        // makeAIMove will lock input while calculating.
-        this.makeAIMove();
-      }
-    }
-
     return true;
   }
 
-  makeAIMove() {
-    // AI move is triggered automatically after a successful WHITE move.
-    if (this.isLocked || this.isAIThinking) return false;
-
+  scheduleAIMove(delay = 900, onComplete = () => {}) {
+    if (this.aiMoveTimeout || this.isLocked || this.isAIThinking) return false;
+    if (this.gameMode !== GAME_MODES.PLAYER_VS_AI) return false;
+    if (this.currentTurn !== COLORS.BLACK) return false;
 
     if (
       this.gameState === GAME_STATES.CHECKMATE ||
@@ -108,7 +109,33 @@ export default class Game {
     ) {
       return false;
     }
-    if (this.currentTurn !== COLORS.BLACK) return false;
+
+    this.isAIThinking = true;
+    this.isLocked = true;
+
+    this.aiMoveTimeout = setTimeout(() => {
+      this.aiMoveTimeout = null;
+      const moved = this.makeAIMove();
+      onComplete(moved);
+    }, delay);
+
+    return true;
+  }
+
+  makeAIMove() {
+    if (
+      this.gameState === GAME_STATES.CHECKMATE ||
+      this.gameState === GAME_STATES.STALEMATE
+    ) {
+      this.isAIThinking = false;
+      this.isLocked = false;
+      return false;
+    }
+    if (this.currentTurn !== COLORS.BLACK) {
+      this.isAIThinking = false;
+      this.isLocked = false;
+      return false;
+    }
 
     this.isAIThinking = true;
     this.isLocked = true;
@@ -118,7 +145,6 @@ export default class Game {
 
       if (!move) return false;
 
-      this.isLocked = false;
       return this.movePiece(
         move.fromRow,
         move.fromCol,
