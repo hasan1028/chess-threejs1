@@ -19,23 +19,23 @@ export default class UIManager {
 
   createUI() {
     this.container.innerHTML = `
-      <div class="ui-panel__row">
-        <span class="ui-panel__label ui-panel__label--turn">SIRA</span>
+      <div class="ui-panel__field">
+        <span class="ui-panel__label">SIRA</span>
         <strong class="ui-panel__value" data-role="current-turn">-</strong>
       </div>
-      <div class="ui-panel__row">
+      <div class="ui-panel__field">
         <span class="ui-panel__label ui-panel__label--state">DURUM</span>
         <strong class="ui-panel__value" data-role="game-state">-</strong>
       </div>
-      <div class="ui-panel__row">
+      <div class="ui-panel__field">
         <span class="ui-panel__label ui-panel__label--mode">MOD</span>
         <strong class="ui-panel__value">Oyuncu vs AI</strong>
       </div>
 
 
-      <button class="ui-panel__button" type="button" data-role="new-game">Yeni Oyun</button>
+      <button type="button" data-role="new-game">Yeni Oyun</button>
       <div class="ui-panel__history">
-        <span class="ui-panel__label ui-panel__history-title">HAMLELER</span>
+        <span class="ui-panel__history-title">HAMLELER</span>
         <ol data-role="move-history"></ol>
       </div>
     `;
